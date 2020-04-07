@@ -18,8 +18,8 @@ pdbFiles = [1 2 3 4]
 quatenionNums = [7, 52, 91, 500]
 fileNameList = []
 for i in 1:4
-    saveFileName = @sprintf "testcase/pdb%02d_quaternion%04d.jld2" pdbFiles[i] quatenionNums[i]
+    saveFileName = @sprintf "testCase/pdb%02d_quaternion%04d.jld2" pdbFiles[i] quatenionNums[i]
     create_image(pdbFiles[i], quatenionNums[i], saveFileName)
     push!(fileNameList, saveFileName)
 end
-@save "testcase/fileNameList.jld2" fileNameList
+@save "testCase/fileNameList.jld2" fileNameList
