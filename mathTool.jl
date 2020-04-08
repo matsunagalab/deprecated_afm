@@ -21,18 +21,37 @@ function getRangeSum(
     return ret
 end
 
-"""
-画像に余白を与えた状態で渡す
-observedは余分な箇所を0で埋めておく
-.: 0
-#: noise
-O: protain
-...        ###
-.O.        #O#
-...        ###
-observed   calculated
-現画像のサイズ(imgH, imgW)と余白の分を与えたサイズ(extendImgH, extendImgW)
-FFTは周期的な動きをするので、その影響がない程度に0埋めを行うこと
+function bayesEstimationWithFFTConvolution(
+        observed::Array{Float64, 2}, 
+        calculated::Array{Float64, 2}, 
+        sigma::Float64)::Float64
+    
+    imgH, imgW = size(observed)
+    N_pix = imgH * imgW
+    plausibleSum = Float64(0)
+
+    C_oo = sum(observed .^ 2)
+    C_ccAcc = [calculated calculated; calculated calculated] .^ 2
+    
+    for h in 1:2imgH, w in 1:2imgW
+        if w != 2imgW C_ccAcc[h, w+1] += C_ccAcc[h, w] end
+    end
+    for h in 1:2imgH, w in 1:2imgW
+        if h != 2imgH C_ccAcc[h+1, w] += C_ccAcc[h, w] end
+    end
+
+    C_coMat = real.(ifft(fft(calculated).*conj.(fft(observed))))
+    
+    for h in 1:imgH, w in 1:imgW
+        C_cc = getRangeSum(C_ccAcc, h, w, h+imgH-1, w+imgW-1)
+        C_co = C_coMat[h, w]
+        
+        plausibleSum += exp(- (C_oo - 2 * C_co + C_cc) / (2 * sigma^2) )
+    end
+    
+    return plausibleSum
+end
+
 """
 function bayesEstimationWithFFTConvolution(
         observed::Array{Float64, 2}, 
@@ -94,3 +113,4 @@ function bayesEstimationWithFFTConvolution(
     
     return plausibleSum
 end
+"""
